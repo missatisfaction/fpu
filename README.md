@@ -1,4 +1,8 @@
 fpu
 ===
 
-Fenv & Fsqrt
+Fdiv & Fsqrt
+
+C言語 : 
+cd C 
+make run
