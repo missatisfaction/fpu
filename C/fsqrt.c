@@ -32,8 +32,6 @@ uint32_t fsqrt( uint32_t a) {
     j++;
   }
   
-  //仮数部の乗算が0.5以上
-
   if((frac&0x1) == 1 && (mod > 0 || (frac&0x2) > 0)) frac += 2;
 
   frac = frac >> 1;
@@ -41,7 +39,6 @@ uint32_t fsqrt( uint32_t a) {
 
   if(zero == 1) exp = 0;
 
-  frac = (int)(frac - 0x800000);
 
   uint32_t retVal = (frac & 0x007FFFFF);
   retVal += exp << 23;

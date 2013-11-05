@@ -31,7 +31,7 @@ uint32_t fdiv( uint32_t a,uint32_t b){
   exp = exp1 - exp2 + 127;
   if (exp1 == 0) exp = 0;
 
-  if (frac < 0x2000000) { //仮数部の商が1.0未満
+  if (frac < 0x2000000) {
     if ( ( frac & 0x1 ) == 1 && ( mod > 0 || ( frac & 0x2 ) > 0 ) ) frac += 2;
     if ( frac < 0x2000000 ) {
       frac = frac >> 1;
@@ -39,7 +39,7 @@ uint32_t fdiv( uint32_t a,uint32_t b){
     } else {
       frac = frac >> 2;
     }
-  } else { //仮数部の乗算が1.0以上(丸めを行っても2.0未満)
+  } else {
     if( ( frac & 0x3 ) > 2 || ( ( frac & 0x3 ) == 2 && ( mod > 0 || ( frac & 0x4 ) > 0) ) ) frac += 4;
     frac = frac >> 2;
   }
