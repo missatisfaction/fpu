@@ -1,8 +1,12 @@
 fpu
 ===
 
-Fdiv & Fsqrt
+Fdiv & Finv & Fsqrt
 
-C言語 : 
-cd C 
-make run
+## C言語  
+* cd C 
+* make run
+
+## Java
+* cd Java
+* make run
