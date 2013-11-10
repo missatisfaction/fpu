@@ -1,79 +1,62 @@
 #include "fpu.h"
 #include <math.h>
+#include <time.h>
 
 union IntAndFloat {
-    uint32_t i;
-    float f;
+  uint32_t i;
+  float f;
 };
 
 uint32_t getUint32_t( float val ) {
-    union IntAndFloat a;
-    a.f = val;
-    return  a.i;
+  union IntAndFloat a;
+  a.f = val;
+  return  a.i;
 }
 
 float getFloat( uint32_t val ) {
-    union IntAndFloat a;
-    a.i = val;
-    return  a.f;
+  union IntAndFloat a;
+  a.i = val;
+  return  a.f;
 }
 
-void print_fsqrt( uint32_t a ) {
-    uint32_t b = fsqrt( a );
-    float af = getFloat(a);
-    float bf = getFloat(b);
-    printf("実装したfsqrt\n");
-    printf("小数表示 fsqrt( %f ) = %f\n", af, bf );
-    printf("10進数表示 fsqrt( %d ) = %d\n", a, b );
-    printf("16進数表示 fsqrt( %x ) = %x\n", a, b );
+
+int check_float( float a, float b ) {
+  uint32_t a_int = getUint32_t( a );
+  uint32_t b_int = getUint32_t( b );
+  float normal_f = (float)sqrt( a );
+  uint32_t sqrt  = getUint32_t( normal_f );
+  uint32_t f_sqrt = fsqrt( a_int );
+  if ( sqrt != f_sqrt ) {
+    printf("数字 : %f\n", a);
+    printf("通常 %x\n", sqrt );
+    printf("自作 %x\n", f_sqrt );
+  }
+  uint32_t inv   = getUint32_t( (float)(1.0 / a ) );
+  uint32_t f_inv  = finv( a_int );
+  uint32_t div   = getUint32_t( (float)(1.0 / b ) );
+  uint32_t f_div  = finv( b_int );
+  return sqrt == f_sqrt && inv == f_inv && div == f_div; 
 }
 
-void print_normalsqrt( uint32_t a ) {
-    float af = getFloat(a);
-    float bf = sqrt( af );
-    uint32_t b = getUint32_t(bf);
-    printf("通常のsqrt\n");
-    printf("小数表示 sqrt( %f ) = %f\n", af, bf );
-    printf("10進数表示 sqrt( %d ) = %d\n", a, b );
-    printf("16進数表示 sqrt( %x ) = %x\n", a, b );
-}
-
-void print_finv( uint32_t a ) {
-    uint32_t b = finv( a );
-    float af = getFloat(a);
-    float bf = getFloat(b);
-    printf("実装したfinv\n");
-    printf("小数表示 finv( %f ) = %f\n", af, bf );
-    printf("10進数表示 finv( %d ) = %d\n", a, b );
-    printf("16進数表示 finv( %x ) = %x\n", a, b );
-}
-
-void print_normalinv( uint32_t a ) {
-    float af = getFloat(a);
-    float bf = 1.0 / af;
-    uint32_t b = getUint32_t(bf);
-    printf("通常のinv\n");
-    printf("小数表示 inv( %f ) = %f\n", af, bf );
-    printf("10進数表示 inv( %d ) = %d\n", a, b );
-    printf("16進数表示 inv( %x ) = %x\n", a, b );
+int rand_float() {
+  float f = (float)rand() / (float)rand();
+  if ( (int)rand() % 2 == 0 ) {
+    f *= -1; 
+  } 
+  return f;
 }
 
 int main(int argc, char const* argv[])
 {
-    /*
-    printf("16進数を入力してください : ");
-    scanf("%x", &a);
-    printf("16進数を入力してください : ");
-    scanf("%x", &b);
-    */
-
-    float f;
-    printf("小数を入力してください \n");
-    scanf("%f", &f);
-    uint32_t a = getUint32_t(f);
-    print_normalsqrt(a );
-    print_fsqrt(a);
-    print_normalinv(a);
-    print_finv(a);
-    return 0;
+  srand((unsigned)time(NULL));
+  int i;
+  for ( int i = 0; i < 1000; i++ ) {
+    if ( !check_float( rand_float(), rand_float() ) ) {
+      printf( "失敗\n" );
+      return 0; 
+    } 
+  }
+  printf( "成功\n" );
+  return 0;
+   
 }

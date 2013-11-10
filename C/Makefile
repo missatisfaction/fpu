@@ -1,14 +1,19 @@
-tester: tester.o fpu.h.gch fsqrt.o finv.o
-	gcc -Wall -o tester fsqrt.o finv.o fpu.h.gch tester.o
+all: tester input
+input: input.o fpu.h.gch fpu.o
+	gcc -Wall -o input fpu.o fpu.h.gch input.o
+tester: tester.o fpu.h.gch fpu.o
+	gcc -Wall -o tester fpu.o fpu.h.gch tester.o
 tester.o: tester.c
 	gcc -c tester.c
+input.o: input.c
+	gcc -c input.c
 fpu.h.gch: fpu.h
 	gcc -c fpu.h
-fsqrt.o: fsqrt.c
-	gcc -c fsqrt.c
-finv.o: finv.c
-	gcc -c finv.c
-run: tester
+fpu.o: fpu.c
+	gcc -c fpu.c
+test: tester
 	./tester
+run: input 
+	./input
 clean:
-	rm tester *.o *.h.gch
+	rm input tester *.o *.h.gch

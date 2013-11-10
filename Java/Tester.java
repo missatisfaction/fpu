@@ -1,64 +1,43 @@
 import java.io.*;
+import java.util.Random;
 
 public class Tester {
 
   public static void main(String[] args) {
-    float f;
-    System.out.print("input float: ");
-    InputStreamReader isr = new InputStreamReader(System.in);
-    BufferedReader br = new BufferedReader(isr);
-    try{
-      String buf = br.readLine();
-      f = Float.parseFloat(buf);
-    }catch(Exception e){
-      f = 0;
+
+    for ( int i = 0; i < 10000; i++ ) {
+      float a = random_float();
+      float b = random_float();
+      if ( !check_float( a, b ) ) {
+        System.out.println( "失敗" );
+        return; 
+      } 
     }
-    System.out.println("Input Number = " + f);
-    int f_int = Fpu.getUint32_t( f );
-    print_normalsqrt( f_int );
-    print_fsqrt( f_int );
-    print_normalinv( f_int );
-    print_finv( f_int );
+    System.out.println( "成功" );
   }
 
-  private static void print_fsqrt( int a ) {
-    int b = Fpu.fsqrt( a );
-    float af = Fpu.getFloat(a);
-    float bf = Fpu.getFloat(b);
-    System.out.println("my fsqrt");
-    System.out.println("小数表示 fsqrt( " + af + " ) = " + bf );
-    System.out.println("10進数表示 fsqrt( " + a + " ) = " + b );
-    System.out.println("16進数表示 fsqrt( " + Integer.toHexString( a ) + " ) = " + Integer.toHexString( b ) );
+  private static float random_float() {
+    Random r = new Random(); 
+    int k = r.nextInt(50);
+    double d = r.nextDouble();  
+    if ( r.nextBoolean() ) {
+      return (float)( k * d );
+    } else {
+      return - (float)( k * d );
+    }
   }
 
-  private static void print_normalsqrt( int a ) {
-    float af = Fpu.getFloat(a);
-    float bf = (float)Math.sqrt( af );
-    int b = Fpu.getUint32_t(bf);
-    System.out.println("通常のsqrt");
-    System.out.println("小数表示 sqrt( " + af + " ) = " + bf );
-    System.out.println("10進数表示 sqrt( " + a + " ) = " + b );
-    System.out.println("16進数表示 sqrt( " + Integer.toHexString( a ) + " ) = " + Integer.toHexString( b ) );
-  }
+  private static boolean check_float( float a, float b ) {
 
-  private static void print_finv( int a ) {
-    int b = Fpu.finv( a );
-    float af = Fpu.getFloat(a);
-    float bf = Fpu.getFloat(b);
-    System.out.println("my finv");
-    System.out.println("小数表示 finv( " + af + " ) = " + bf );
-    System.out.println("10進数表示 finv( " + a + " ) = " + b );
-    System.out.println("16進数表示 finv( " + Integer.toHexString( a ) + " ) = " + Integer.toHexString( b ) );
-  }
-
-  private static void print_normalinv( int a ) {
-    float af = Fpu.getFloat(a);
-    float bf = (float)1.0 / af;
-    int b = Fpu.getUint32_t(bf);
-    System.out.println("通常のinv");
-    System.out.println("小数表示 inv( " + af + " ) = " + bf );
-    System.out.println("10進数表示 inv( " + a + " ) = " + b );
-    System.out.println("16進数表示 inv( " + Integer.toHexString( a ) + " ) = " + Integer.toHexString( b ) );
+    int a_int = Fpu.getUint32_t( a );
+    int b_int = Fpu.getUint32_t( b );
+    int sqrt  = Fpu.getUint32_t( (float)Math.sqrt( a ) );
+    int fsqrt = Fpu.fsqrt( a_int );
+    int inv   = Fpu.getUint32_t( (float)(1.0 / a) );
+    int finv  = Fpu.finv( a_int );
+    int div   = Fpu.getUint32_t( a / b );
+    int fdiv  = Fpu.fdiv( a_int, b_int );
+    return sqrt == fsqrt && inv == finv && div == fdiv; 
   }
 
 }

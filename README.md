@@ -6,7 +6,9 @@ Fdiv & Finv & Fsqrt
 ## C言語  
 * cd C 
 * make run
+* make test
 
 ## Java
 * cd Java
-* make run
+* make input
+* make test
