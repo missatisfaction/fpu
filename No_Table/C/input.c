@@ -1,6 +1,23 @@
 #include "fpu.h"
 #include <math.h>
 
+union IntAndFloat {
+    uint32_t i;
+    float f;
+};
+
+uint32_t getUint32_t( float val ) {
+    union IntAndFloat a;
+    a.f = val;
+    return  a.i;
+}
+
+float getFloat( uint32_t val ) {
+    union IntAndFloat a;
+    a.i = val;
+    return  a.f;
+}
+
 void print_fsqrt( uint32_t a ) {
     uint32_t b = fsqrt( a );
     float af = getFloat(a);
@@ -49,6 +66,7 @@ int main(int argc, char const* argv[])
     printf("16進数を入力してください : ");
     scanf("%x", &b);
     */
+
     float f;
     printf("小数を入力してください \n");
     scanf("%f", &f);

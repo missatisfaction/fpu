@@ -65,7 +65,6 @@ public class Fpu {
     int exp1  = array[1]; 
     int frac1 = array[2];
 
-    int j = 0;
     
     if (exp1 == 0) {
       return float_with( sign1, 0, 0 );  
@@ -74,30 +73,26 @@ public class Fpu {
       return float_with( 1, 255, 4194304 );
     }
 
-    mod = 0x800000+ frac1;
-    if ( exp1 % 2 == 0) {
+    mod = 0x800000 + frac1;
+    if ( exp1 % 2 == 0 ) {
       mod = mod << 1;
-      exp = ( exp1 - 126)/2 + 127;
+      exp = ( exp1 - 126 ) / 2 + 126;
     } else {
-      exp = ( exp1 - 125)/2 + 127;
+      exp = ( exp1 - 125 ) / 2 + 126;
     }
 
-    while (j < 25) {
-      if((mod << 1) > ( frac << 1) + (1 << (24 - j))) {
-        mod = (mod << 1) - (frac << 1) - (1 << (24 - j));
-        frac = frac + (1 << (24 - j));
+    for ( int j = 24; 0 <= j; j-- ) {
+      if((mod << 1) > ( frac << 1) + (1 << j)) {
+        mod = (mod << 1) - (frac << 1) - (1 << j);
+        frac = frac + (1 << j);
       } else {
         mod = (mod << 1);
       }
-      j++;
     }
 
-
-    if ( (frac&0x1) == 1 && (mod > 0 || (frac&0x2) > 0) ) frac += 2;
+    if ( ( frac & 0x1 ) == 1 && ( mod > 0 || ( frac & 0x2 ) > 0) ) frac += 2;
 
     frac = frac >> 1;
-    exp = exp - 1;
-
 
     return float_with( 0, exp, frac );
   }

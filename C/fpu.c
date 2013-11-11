@@ -1,4 +1,22 @@
 #include "fpu.h"
+#include "table.h"
+
+union IntAndFloat {
+    uint32_t i;
+    float f;
+};
+
+uint32_t getUint32_t( float val ) {
+    union IntAndFloat a;
+    a.f = val;
+    return  a.i;
+}
+
+float getFloat( uint32_t val ) {
+    union IntAndFloat a;
+    a.i = val;
+    return  a.f;
+}
 
 uint32_t float_with( sign, exp, frac ){
   uint32_t retVal = (frac & 0x007FFFFF);
@@ -7,15 +25,16 @@ uint32_t float_with( sign, exp, frac ){
   return retVal;
 }
 
-uint32_t fsqrt( uint32_t a) {
-  int frac = 0;
-  int mod = 0;
-  int exp = 0;
-  int sign1 = a >> 31;
-  int frac1 = a & 0x007FFFFF;
-  int exp1 = ( a & 0x7F800000 ) >> 23;
- 
-  int j = 0;
+int sign_with_pointer( uint32_t a, int* exp, int* frac ) {
+  *frac = a & 0x007FFFFF;
+  *exp = ( a & 0x7F800000 ) >> 23;
+  return a >> 31;
+}
+
+uint32_t fsqrt(uint32_t a) {
+
+  int exp1, frac1;
+  int sign1 = sign_with_pointer( a, &exp1, &frac1 );
 
   if (exp1 == 0) {
     return float_with( sign1, 0, 0 );  
@@ -24,73 +43,59 @@ uint32_t fsqrt( uint32_t a) {
     return float_with( 1, 255, 4194304 );
   }
 
-  mod = 0x800000+ frac1;
-  if ( exp1 % 2 == 0) {
-    mod = mod << 1;
+  int key = ( 0x800000 + frac1 ) >> 14;
+  int comp;
+  int exp;
+  if ( exp1 % 2 == 0 ) {
+    comp = ( frac1 & 0x3FFF) << 1;
     exp = ( exp1 - 126)/2 + 127;
   } else {
-    exp = ( exp1 - 125)/2 + 127;
+    key = key >> 1;
+    comp = frac1 & 0x7FFF;
+    exp = ( exp1 - 125 ) / 2 + 127;
   }
 
-  while (j < 25) {
-    if((mod << 1) > ( frac << 1) + (1 << (24 - j))) {
-      mod = (mod << 1) - (frac << 1) - (1 << (24 - j));
-      frac = frac + (1 << (24 - j));
-    } else {
-      mod = (mod << 1);
-    }
-    j++;
-  }
-  
-  if((frac&0x1) == 1 && (mod > 0 || (frac&0x2) > 0)) frac += 2;
+  key -= 256;
 
-  frac = frac >> 1;
-  exp = exp - 1;
+  int frac = tb_sqrt_val[key] << 2;
+  comp = comp * (tb_sqrt_tan[key]);
+  frac += comp >> 12;
 
-  uint32_t retVal = (frac & 0x007FFFFF);
-  retVal += exp << 23;
+  if ( frac % 4 == 3 || frac % 8 == 6 || ( frac % 4 == 2 && ( comp & 0xFFF ) != 0 )) frac += 4;
 
-  return retVal;
+  return float_with( 0, exp - 1, frac >> 2 );
 }
 
-uint32_t fdiv( uint32_t a,uint32_t b){
-  int frac = 0;
-  int mod = 0;
-  int exp = 0;
-  int sign1 = a >> 31;
-  int exp1  = ( a & 0x7F800000 ) >> 23;
-  int frac1 = a & 0x007FFFFF;
-  int sign2 = b >> 31;
-  int exp2  = ( b & 0x7F800000 ) >> 23;
-  int frac2 = b & 0x007FFFFF;
+uint32_t finv(uint32_t a){
 
-  int sign = ( sign1 && !sign2 ) || (!sign1 && sign2 ); 
-  
-  if (exp2 == 0) {
-    return float_with( sign, 255, 0 );
-  } else if ( exp1 == 0 ) {
-    return 0;
-  }
+  int exp1, frac1;
+  int sign1 = sign_with_pointer( a, &exp1, &frac1 );
 
-  frac = ((unsigned long long)(0x800000 + frac1) << 25) / (unsigned long long)(0x800000 + frac2);
-  mod = ((unsigned long long)(0x800000 + frac1) << 25) % (unsigned long long)(0x800000 + frac2);
-  exp = exp1 - exp2 + 127;
+  int key = frac1 >> 13;
+  int frac = tb_finv_val[key];
+  int exp;
 
-  if (frac < 0x2000000) {
-    if ( ( frac & 0x1 ) == 1 && ( mod > 0 || ( frac & 0x2 ) > 0 ) ) frac += 2;
-    if ( frac < 0x2000000 ) {
-      frac = frac >> 1;
-      exp = exp - 1;
-    } else {
-      frac = frac >> 2;
-    }
+  if ( frac != 0) {
+    frac += 0x800000;
   } else {
-    if( ( frac & 0x3 ) > 2 || ( ( frac & 0x3 ) == 2 && ( mod > 0 || ( frac & 0x4 ) > 0) ) ) frac += 4;
-    frac = frac >> 2;
+    frac = 0x1000000;
   }
-  return float_with( sign, exp, frac );
-}
+  
+  int comp = ( tb_finv_tan[key] * ( frac1 & 0x1FFF ) );
+  frac -= comp >> 11;
+  if ( ( comp & 0x3FF ) != 0) frac -= 1;
+  if ( ( frac1 & 0x1F00 ) <= 0x1500 && ( frac1 & 0x1F00 ) >= 0x0F00) frac -= 1;
 
-uint32_t finv( uint32_t a ) {  
-  return fdiv( 1065353216, a );
+  if ( frac > 0xFFFFFF ) {
+    exp = 254 - exp1;
+    frac = frac >> 1;
+  } else {
+    exp = 253 - exp1;
+  }
+
+  if (exp > 255) {
+    exp = 0;
+    frac = 0;
+  } 
+  return float_with( sign1, exp, frac );
 }
