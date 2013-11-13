@@ -55,7 +55,21 @@ int main(int argc, char const* argv[])
     uint32_t a = getUint32_t(f);
     print_normalsqrt(a );
     print_fsqrt(a);
+
+    if ( is_valid_fsqrt( a ) ) {
+      printf( "Sqrtはほぼ同じと判定されました\n" );
+    } else {
+      printf( "Sqrtは間違っていると判定されました\n" );
+    }
+
     print_normalinv(a);
     print_finv(a);
+
+    if ( is_valid_finv( a ) ) {
+      printf( "Invはほぼ同じと判定されました\n" );
+    } else {
+      printf( "Invは間違っていると判定されました\n" );
+    }
+
     return 0;
 }

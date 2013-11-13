@@ -1,5 +1,6 @@
 #include "fpu.h"
 #include "table.h"
+#include <math.h>
 
 union IntAndFloat {
     uint32_t i;
@@ -99,3 +100,27 @@ uint32_t finv(uint32_t a){
   } 
   return float_with( sign1, exp, frac );
 }
+
+double max_double( double a, double b ) {
+  return ( a < b ) ? b : a;
+}
+
+int is_valid_fsqrt( uint32_t value ) {
+
+  double my_fsqrt = (double)getFloat( fsqrt( value ) );
+  double n_sqrt   = (double)sqrt( getFloat( value ) );
+
+  return ( isnan( my_fsqrt ) && isnan( n_sqrt ) ) ||
+    abs( my_fsqrt - n_sqrt ) < 
+    max_double( n_sqrt * pow( 2, - 20 ), pow( 2, -126 ) );
+} 
+
+int is_valid_finv( uint32_t value ) {
+
+  double my_finv = (double)getFloat( finv( value ) );
+  double n_inv   = (double)1 / ( getFloat( value ) );
+
+  return ( isnan( my_finv ) && isnan( n_inv ) ) ||
+    abs( my_finv - n_inv ) < 
+    max_double( abs( n_inv ) * pow( 2, - 20 ), pow( 2, -126 ) );
+} 
